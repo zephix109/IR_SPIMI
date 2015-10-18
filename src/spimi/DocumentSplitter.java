@@ -64,6 +64,15 @@ public class DocumentSplitter {
 				
 			}else {
 				
+				//Remove punctuation marks
+            	line = line.replaceAll("[\\p{Punct}]", " ");	
+            	
+				//Remove numbers
+				line = line.replaceAll("\\d"," ");
+				
+				//Case folding
+				line = line.toLowerCase();
+				
 				if(currentFile.getNewsContent() == null) {
 					
 					currentFile.setNewsContent(line);

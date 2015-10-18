@@ -7,6 +7,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,20 +48,23 @@ public class Driver {
 	    for(File file : files) {
 	    	DocumentSplitter.getInstance().parseSgmFile(file);
 	    }
-	    System.out.println("Done!");
+	    System.out.println("done!");
 	    
 	    //Construct block inverted index by SPIMI
 	    System.out.print("Building inveted index...");
 	    String savePath = System.getProperty("user.dir") + File.separator + "reuters" + File.separator;
 	    
 		File blocks = InvertedIndexer.getInstance().spimiInvert(new File(savePath));
-	    System.out.println("Done!");
+	    System.out.println("done!");
 
 		//Merge blocks 
 		System.out.print("Merging blocks...");
 		Map<String, List<String>> dictionary = mergeBlocks(blocks);
-	    System.out.println("Done!");
+	    System.out.println("done!");
 	    System.out.println();
+	    
+	    //Remove stop words
+	    dictionary = removeStopWords(dictionary, 150);
 
 		//Query
 		System.out.println("------------Dictionary Ready For Query------------");
@@ -80,7 +85,7 @@ public class Driver {
 			String query = sc.nextLine();
 			System.out.println("------------Query for term [" + query + "]--------------");
 
-			if(dictionary.containsKey(query)) {
+			if(dictionary.containsKey(query.toLowerCase())) {
 				System.out.println(dictionary.get(query).size() + " documents contains term " + "["+query  +"];");
 				System.out.println("Found term in these documents(ID):");
 				System.out.println(dictionary.get(query));
@@ -126,6 +131,7 @@ public class Driver {
 			while ((line = reader.readLine()) != null) {
 				
 				String[] tuple = line.split(":");
+	
 				List<String> postingsList = new ArrayList<String>(Arrays.asList(tuple[1].split(",")));
 				subDictionary.put(tuple[0], postingsList);	
 				
@@ -142,6 +148,35 @@ public class Driver {
 			reader.close();
 		}
 		return finalDictionary;		
+	}
+	
+	public static Map<String, List<String>> removeStopWords(Map<String, List<String>> dic, int number) {
+		
+		Map<List<String>, String> reverseMap = new HashMap<List<String>, String>();
+		
+		List<List<String>> tempList = new ArrayList<List<String>>();
+		
+		for(Map.Entry<String, List<String>> entry : dic.entrySet()) {
+			reverseMap.put(entry.getValue(), entry.getKey());
+			tempList.add(entry.getValue());
+		}
+		
+		Collections.sort(tempList, new Comparator<List<String>>(){
+			@Override
+			public int compare(List<String> o1, List<String> o2) {
+				return o2.size() - o1.size();
+			}
+		});
+		
+		for(int i=0; i< number; i++) {
+			List<String> listToRemove = tempList.get(i);
+			String keyToRemove = reverseMap.get(listToRemove);
+			dic.remove(keyToRemove);
+			System.out.println(keyToRemove);
+		}
+		
+		return dic;
+		
 	}
 
 }
