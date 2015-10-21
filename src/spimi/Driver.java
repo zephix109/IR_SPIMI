@@ -64,7 +64,7 @@ public class Driver {
 	    System.out.println();
 	    
 	    //Remove stop words
-	    dictionary = removeStopWords(dictionary, 150);
+	    dictionary = removeStopWords(dictionary, 100);
 
 		//Query
 		System.out.println("------------Dictionary Ready For Query------------");
@@ -81,12 +81,13 @@ public class Driver {
 		while(flag) {
 			
 			System.out.println("Please input your query:");
+			
+			String originalInput = sc.nextLine();
+			String query = originalInput.toLowerCase();
+			System.out.println("------------Query for term [" + originalInput + "]--------------");
 
-			String query = sc.nextLine();
-			System.out.println("------------Query for term [" + query + "]--------------");
-
-			if(dictionary.containsKey(query.toLowerCase())) {
-				System.out.println(dictionary.get(query).size() + " documents contains term " + "["+query  +"];");
+			if(dictionary.containsKey(query)) {
+				System.out.println(dictionary.get(query).size() + " documents contains term " + "["+originalInput  +"];");
 				System.out.println("Found term in these documents(ID):");
 				System.out.println(dictionary.get(query));
 				System.out.println("--------------------------------------------------");
@@ -150,13 +151,27 @@ public class Driver {
 		return finalDictionary;		
 	}
 	
-	public static Map<String, List<String>> removeStopWords(Map<String, List<String>> dic, int number) {
+	/**
+	 * Removes the stop words.
+	 * Gets the stop words by sorting postings' lists by their sizes. 
+	 *
+	 * @param dic the dict
+	 * @param number the number
+	 * @return the map
+	 */
+	public static Map<String, List<String>> removeStopWords(Map<String, List<String>> dict, int number) {
 		
 		Map<List<String>, String> reverseMap = new HashMap<List<String>, String>();
 		
 		List<List<String>> tempList = new ArrayList<List<String>>();
 		
-		for(Map.Entry<String, List<String>> entry : dic.entrySet()) {
+		int id = 0;
+		for(Map.Entry<String, List<String>> entry : dict.entrySet()) {
+			
+			
+			entry.getValue().add(String.valueOf(id));
+			
+			id++;
 			reverseMap.put(entry.getValue(), entry.getKey());
 			tempList.add(entry.getValue());
 		}
@@ -167,15 +182,17 @@ public class Driver {
 				return o2.size() - o1.size();
 			}
 		});
+				
+		
 		
 		for(int i=0; i< number; i++) {
 			List<String> listToRemove = tempList.get(i);
 			String keyToRemove = reverseMap.get(listToRemove);
-			dic.remove(keyToRemove);
-			System.out.println(keyToRemove);
+			reverseMap.remove(listToRemove);
+			dict.remove(keyToRemove);
 		}
 		
-		return dic;
+		return dict;
 		
 	}
 
