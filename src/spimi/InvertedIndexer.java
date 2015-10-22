@@ -1,9 +1,6 @@
 package spimi;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -13,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
-import java.util.StringTokenizer;
 
 /**
  * The Class InvertedIndexer.
@@ -42,6 +38,9 @@ public class InvertedIndexer {
 
 	/** The dictionary. */
 	private Map<String, List<String>> dictionary;
+	
+	private int outputFileId = 0;
+	
 
 	/**
 	 * Spimi invert.
@@ -50,67 +49,40 @@ public class InvertedIndexer {
 	 * @return the file
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public File spimiInvert (File rootFolder) throws IOException {
+	public File spimiInvert(TokenStream tokenStream) throws IOException {
 		
-		String blockSavingPath = "";
 		
-		File[] folders = rootFolder.listFiles(new FilenameFilter() {
-			  @Override
-			  public boolean accept(File current, String name) {
-			    return new File(current, name).isDirectory();
-			  }
-		});
+		dictionary = new HashMap<String, List<String>>();
 		
-		for(File folder : folders) {
+		long freeMemory = 100000;
+		
+		while(freeMemory >0) {
 			
-			File[] newsFiles = folder.listFiles(new FilenameFilter() {
-				  @Override
-				  public boolean accept(File current, String name) {
-				    return name.toLowerCase().endsWith(".news");
-				  }
-			});
+			freeMemory--;
 			
-			dictionary = new HashMap<String, List<String>>();
-			
-			for(File file : newsFiles) {
-				
-				String fileID = file.getName();
-				
-				BufferedReader reader = new BufferedReader(new FileReader(file));
-				String line;
-				
-				
-				while ((line = reader.readLine()) != null) {
-				
-					StringTokenizer tokenizer = new StringTokenizer(line);
-					while(tokenizer.hasMoreTokens()) {
-						
-						String currentToken = tokenizer.nextToken();
-						
-						if(dictionary.containsKey(currentToken)) {
-							
-							if(!dictionary.get(currentToken).contains(fileID)) {
-								dictionary.get(currentToken).add(fileID);
-							}
-							
-						} else {
-							List<String> newPostingsList = new ArrayList<String>();
-							newPostingsList.add(fileID);
-							dictionary.put(currentToken, newPostingsList);
-							
-						}
+			if(tokenStream.hasNextToken()) {
+				Token token = tokenStream.nextToken();
+
+				if(dictionary.containsKey(token.term)) {
+					if(!dictionary.get(token.term).contains(token.docId)) {
+						dictionary.get(token.term).add(token.docId);
 					}
+				} else {
+					List<String> newPostingsList = new ArrayList<String>();
+					newPostingsList.add(token.docId);
+					dictionary.put(token.term, newPostingsList);
 				}
-				
-				reader.close();
-				
 			}
 			
-			blockSavingPath = writeBlockToDisk(dictionary, folder.getName());
 		}
 		
-		return new File(blockSavingPath);
+		File output = writeBlockToDisk(dictionary, String.valueOf(outputFileId));
+		outputFileId ++;
+		
+		return output;
+		
 	}
+
 	
 	/**
 	 * Write block to disk.
@@ -120,14 +92,14 @@ public class InvertedIndexer {
 	 * @return the string
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public String writeBlockToDisk(Map<String, List<String>> dictionary, String blockName) throws IOException {
+	public File writeBlockToDisk(Map<String, List<String>> dictionary, String blockName) throws IOException {
 		
-		String savePath = System.getProperty("user.dir") + File.separator + "blocks" +  File.separator;
+		String blockPath = System.getProperty("user.dir") + File.separator + "blocks" +  File.separator;
 
 		
-        if (!(new File(savePath)).exists()) {	
+        if (!(new File(blockPath)).exists()) {	
         	
-    		new File(savePath).mkdirs();
+    		new File(blockPath).mkdirs();
         }
         
         StringBuilder sb = new StringBuilder(); 
@@ -142,10 +114,11 @@ public class InvertedIndexer {
         	sb.append(sj);
         }
         
+        String savePath = blockPath + blockName + ".block";
         
-		Files.write(Paths.get(savePath + blockName + ".block"), sb.toString().getBytes(), StandardOpenOption.CREATE);
+		Files.write(Paths.get(savePath), sb.toString().getBytes(), StandardOpenOption.CREATE);
 		
-		return savePath;
+		return new File(savePath);
 
 	}
 	

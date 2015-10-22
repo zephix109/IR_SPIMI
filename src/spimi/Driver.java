@@ -52,14 +52,21 @@ public class Driver {
 	    
 	    //Construct block inverted index by SPIMI
 	    System.out.print("Building inveted index...");
-	    String savePath = System.getProperty("user.dir") + File.separator + "reuters" + File.separator;
+	    String reutersPath = System.getProperty("user.dir") + File.separator + "reuters" + File.separator;
+	    TokenStream stream = TokenStream.getInstance();
+	    stream.initialize(new File(reutersPath));
+	    while(stream.hasNextToken()) {
+	    	InvertedIndexer indexer = InvertedIndexer.getInstance();
+	    	indexer.spimiInvert(stream);
+	    }
 	    
-		File blocks = InvertedIndexer.getInstance().spimiInvert(new File(savePath));
 	    System.out.println("done!");
 
 		//Merge blocks 
 		System.out.print("Merging blocks...");
-		Map<String, List<String>> dictionary = mergeBlocks(blocks);
+		
+		String blockPath = System.getProperty("user.dir") + File.separator + "blocks" +  File.separator;
+		Map<String, List<String>> dictionary = mergeBlocks(new File(blockPath));
 	    System.out.println("done!");
 	    System.out.println();
 	    
@@ -166,12 +173,14 @@ public class Driver {
 		List<List<String>> tempList = new ArrayList<List<String>>();
 		
 		int id = 0;
+		
 		for(Map.Entry<String, List<String>> entry : dict.entrySet()) {
 			
 			
 			entry.getValue().add(String.valueOf(id));
 			
 			id++;
+			
 			reverseMap.put(entry.getValue(), entry.getKey());
 			tempList.add(entry.getValue());
 		}
