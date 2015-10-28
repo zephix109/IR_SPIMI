@@ -66,10 +66,10 @@ public class DocumentSplitter {
 				
 				//Remove punctuation marks
             	line = line.replaceAll("[\\p{Punct}]", " ");	
-            	
-				//Remove numbers
+//            	
+//				//Remove numbers
 				line = line.replaceAll("\\d"," ");
-				
+//				
 				//Case folding
 				line = line.toLowerCase();
 				

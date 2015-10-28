@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.StringJoiner;
+
+import model.Posting;
 
 /**
  * The Class Driver.
@@ -66,18 +69,18 @@ public class Driver {
 		System.out.print("Merging blocks...");
 		
 		String blockPath = System.getProperty("user.dir") + File.separator + "blocks" +  File.separator;
-		Map<String, List<String>> dictionary = mergeBlocks(new File(blockPath));
+		Map<String, List<Posting>> dictionary = mergeBlocks(new File(blockPath));
 	    System.out.println("done!");
 	    System.out.println();
 	    
 	    //Remove stop words
-	    dictionary = removeStopWords(dictionary, 100);
+	    dictionary = removeStopWords(dictionary, 0);
 
 		//Query
 		System.out.println("------------Dictionary Ready For Query------------");
 		System.out.println("Number Of Terms = " + dictionary.size());
 		int numOfPostings = 0;
-		for(List<String> postingsList :dictionary.values()) {
+		for(List<Posting> postingsList :dictionary.values()) {
 			numOfPostings += postingsList.size();
 		}
 		System.out.println("Number Of Postings = " + numOfPostings  );
@@ -86,28 +89,132 @@ public class Driver {
 
 		Boolean flag = true;
 		while(flag) {
-			
+			System.out.println();
 			System.out.println("Please input your query:");
 			
 			String originalInput = sc.nextLine();
 			String query = originalInput.toLowerCase();
+			
+			
+			String[] querySplit = query.split("\\s+");
+			
 			System.out.println("------------Query for term [" + originalInput + "]--------------");
 
-			if(dictionary.containsKey(query)) {
-				System.out.println(dictionary.get(query).size() + " documents contains term " + "["+originalInput  +"];");
-				System.out.println("Found term in these documents(ID):");
-				System.out.println(dictionary.get(query));
-				System.out.println("--------------------------------------------------");
-
+			if(querySplit.length > 1) {
+				if(!phraseQuery(dictionary, querySplit)){
+					System.out.println("cannot find");
+				}
 			} else {
-				System.out.println("Cannot find term in dictionary!");
-				System.out.println("--------------------------------------------------");
+				wordQuery(dictionary, query);
+			}
+			
+			
 
-			}			
+				
 		}	
 		sc.close();		
 	}
 	
+	private static boolean phraseQuery(Map<String, List<Posting>> dictionary, String[] querySplit) {
+		
+		List<String> resultList = new ArrayList<String>();
+		
+		List<Map<String, List<String>>> phraseQueryList = new ArrayList<Map<String, List<String>>>();
+		
+		for(String s : querySplit) {
+			if(!dictionary.containsKey(s)) {
+
+				return false;
+			} else {
+				
+				Map<String, List<String>> postingMap = new HashMap<String, List<String>>();
+				
+				for(Posting posting : dictionary.get(s)) {
+					postingMap.put(posting.getDocId(), posting.getPositions());
+				}
+
+				phraseQueryList.add(postingMap);
+				
+			}
+		}
+			
+		Map<String, List<String>> beginWordMap = phraseQueryList.get(0);
+		
+		for(Map.Entry<String, List<String>> entry : beginWordMap.entrySet()) {
+			
+			String beginWordDocId = entry.getKey();
+			
+			boolean flag = true;
+			
+			for(int i=1; i<phraseQueryList.size(); i++) {
+				if(!phraseQueryList.get(i).containsKey(beginWordDocId)) {
+					flag = false;
+				}
+			}
+			
+			if(flag) {
+				
+				for(String position : entry.getValue()) {
+					int beginPosition = Integer.valueOf(position);
+					
+					for(int i=1; i<phraseQueryList.size(); i++) {
+						
+						
+						for(Map.Entry<String, List<String>> otherEntry : phraseQueryList.get(i).entrySet()) {
+							if(otherEntry.getKey().equalsIgnoreCase(beginWordDocId)) {
+								
+								if(!otherEntry.getValue().contains(String.valueOf((beginPosition + i)))) {
+									flag = false;
+								} 
+							}
+							
+						}
+						
+					}
+				}
+			}
+			
+			
+			if(flag) {
+				
+				resultList.add(beginWordDocId);
+			}	
+		}	
+		
+		if(resultList.size() <= 0) {
+
+			return false;
+		} else {
+			System.out.print(resultList);
+		}
+		
+		return true;
+	}
+
+	private static void wordQuery(Map<String, List<Posting>> dictionary, String query) {
+		
+		if(dictionary.containsKey(query)) {
+			
+			System.out.println(dictionary.get(query).size() + " documents contains term " + "["+query  +"];");
+			System.out.println("Found term in these documents(ID):");
+			
+			List<Posting> postingList = dictionary.get(query);
+			
+			StringJoiner sj = new StringJoiner(",", "[", "]");
+			for(Posting p : postingList) {
+				sj.add(p.getDocId());
+			}
+			System.out.println(sj);
+			System.out.println("--------------------------------------------------");
+
+		} else {
+			System.out.println("Cannot find term in dictionary!");
+			System.out.println("--------------------------------------------------");
+
+		}	
+		
+	}
+
 	/**
 	 * Merge blocks.
 	 *
@@ -115,9 +222,9 @@ public class Driver {
 	 * @return the map
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public static Map<String, List<String>> mergeBlocks(File blocks) throws IOException {
+	public static Map<String, List<Posting>> mergeBlocks(File blocks) throws IOException {
 		
-		Map<String, List<String>> finalDictionary = new HashMap<String, List<String>>();
+		Map<String, List<Posting>> finalDictionary = new HashMap<String, List<Posting>>();
 
 		File[] blockList = blocks.listFiles(new FilenameFilter() {
 			  @Override
@@ -128,7 +235,7 @@ public class Driver {
 		
 		for(File block : blockList) {
 			
-			Map<String, List<String>> subDictionary = new HashMap<String, List<String>>();
+			Map<String, List<Posting>> subDictionary = new HashMap<String, List<Posting>>();
 
 			
 			BufferedReader reader = new BufferedReader(new FileReader(block)); 
@@ -138,14 +245,37 @@ public class Driver {
 			
 			while ((line = reader.readLine()) != null) {
 				
-				String[] tuple = line.split(":");
+				String[] element = line.split(":");
 	
-				List<String> postingsList = new ArrayList<String>(Arrays.asList(tuple[1].split(",")));
-				subDictionary.put(tuple[0], postingsList);	
+				String[] postingSplit = element[1].split(",");
+				
+				List<Posting> postingList = new ArrayList<Posting>();
+
+				
+				for(String postingString : postingSplit) {
+					
+					Posting posting = new Posting();
+					
+					
+					String[] docIdSplit = postingString.split("@");
+					
+					String[] positionSplit = docIdSplit[1].split("-");
+					
+					List<String> positionList = new ArrayList<String>(Arrays.asList(positionSplit));
+
+					
+					posting.setDocId(docIdSplit[0]);
+					posting.setPositions(positionList);	
+					
+					postingList.add(posting);
+					
+				}			
+				
+				subDictionary.put(element[0], postingList);	
 				
 			}
 			
-			for(Map.Entry<String, List<String>> entry : subDictionary.entrySet()) {
+			for(Map.Entry<String, List<Posting>> entry : subDictionary.entrySet()) {
 				
 				if(finalDictionary.containsKey(entry.getKey())) {
 					finalDictionary.get(entry.getKey()).addAll(entry.getValue());
@@ -166,18 +296,21 @@ public class Driver {
 	 * @param number the number
 	 * @return the map
 	 */
-	public static Map<String, List<String>> removeStopWords(Map<String, List<String>> dict, int number) {
+	public static Map<String, List<Posting>> removeStopWords(Map<String, List<Posting>> dict, int number) {
 		
-		Map<List<String>, String> reverseMap = new HashMap<List<String>, String>();
+		Map<List<Posting>, String> reverseMap = new HashMap<List<Posting>, String>();
 		
-		List<List<String>> tempList = new ArrayList<List<String>>();
+		List<List<Posting>> tempList = new ArrayList<List<Posting>>();
 		
 		int id = 0;
 		
-		for(Map.Entry<String, List<String>> entry : dict.entrySet()) {
+		for(Map.Entry<String, List<Posting>> entry : dict.entrySet()) {
+			
+			Posting posting = new Posting();
+			posting.setDocId(String.valueOf(id));
 			
 			
-			entry.getValue().add(String.valueOf(id));
+			entry.getValue().add(posting);
 			
 			id++;
 			
@@ -185,9 +318,9 @@ public class Driver {
 			tempList.add(entry.getValue());
 		}
 		
-		Collections.sort(tempList, new Comparator<List<String>>(){
+		Collections.sort(tempList, new Comparator<List<Posting>>(){
 			@Override
-			public int compare(List<String> o1, List<String> o2) {
+			public int compare(List<Posting> o1, List<Posting> o2) {
 				return o2.size() - o1.size();
 			}
 		});
@@ -195,7 +328,7 @@ public class Driver {
 		
 		
 		for(int i=0; i< number; i++) {
-			List<String> listToRemove = tempList.get(i);
+			List<Posting> listToRemove = tempList.get(i);
 			String keyToRemove = reverseMap.get(listToRemove);
 			reverseMap.remove(listToRemove);
 			dict.remove(keyToRemove);

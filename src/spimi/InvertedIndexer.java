@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import model.Posting;
+import model.Token;
+
 /**
  * The Class InvertedIndexer.
  */
@@ -37,7 +40,7 @@ public class InvertedIndexer {
 	}
 
 	/** The dictionary. */
-	private Map<String, List<String>> dictionary;
+	private Map<String, List<Posting>> dictionary;
 	
 	private int outputFileId = 0;
 	
@@ -52,26 +55,30 @@ public class InvertedIndexer {
 	public File spimiInvert(TokenStream tokenStream) throws IOException {
 		
 		
-		dictionary = new HashMap<String, List<String>>();
+		dictionary = new HashMap<String, List<Posting>>();
 		
-		long freeMemory = 100000;
+		long freeMemory = 10000;
 		
 		while(freeMemory >0) {
 			
 			freeMemory--;
 			
 			if(tokenStream.hasNextToken()) {
+				
 				Token token = tokenStream.nextToken();
 
-				if(dictionary.containsKey(token.term)) {
-					if(!dictionary.get(token.term).contains(token.docId)) {
-						dictionary.get(token.term).add(token.docId);
-					}
+				List<Posting> postingList;
+				
+				if(!dictionary.containsKey(token.getTerm())) {
+					
+					postingList = addToDictionary(dictionary, token.getTerm());
+					
 				} else {
-					List<String> newPostingsList = new ArrayList<String>();
-					newPostingsList.add(token.docId);
-					dictionary.put(token.term, newPostingsList);
+
+					postingList = getPostingsList(dictionary, token.getTerm());
 				}
+				
+				addToPostingsList(postingList, token);
 			}
 			
 		}
@@ -92,7 +99,7 @@ public class InvertedIndexer {
 	 * @return the string
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public File writeBlockToDisk(Map<String, List<String>> dictionary, String blockName) throws IOException {
+	public File writeBlockToDisk(Map<String, List<Posting>> dictionary, String blockName) throws IOException {
 		
 		String blockPath = System.getProperty("user.dir") + File.separator + "blocks" +  File.separator;
 
@@ -101,17 +108,28 @@ public class InvertedIndexer {
         	
     		new File(blockPath).mkdirs();
         }
-        
         StringBuilder sb = new StringBuilder(); 
         
-        for(Map.Entry<String, List<String>> entry: dictionary.entrySet()) {
+        for(Map.Entry<String, List<Posting>> entry: dictionary.entrySet()) {
         	sb.append(entry.getKey() + ":");
-        	
-    		StringJoiner sj = new StringJoiner(",","",System.getProperty("line.separator"));
-        	for(String s : entry.getValue()) {
-        		sj.add(s.replace(".news", "")); 			
+    		StringJoiner postingJoiner = new StringJoiner(",","",System.getProperty("line.separator"));
+    		
+        	for(Posting posting : entry.getValue()) {
+        		
+        		String s = posting.getDocId();
+        		
+        		StringJoiner positionJoiner = new StringJoiner("-", "@", "");
+        		
+        		for(String position : posting.getPositions()) {
+        			positionJoiner.add(position);
+        		}
+        		
+        		
+        		postingJoiner.add(s.replace(".news", "") + positionJoiner.toString());		
         	}
-        	sb.append(sj);
+        	
+        	
+        	sb.append(postingJoiner);
         }
         
         String savePath = blockPath + blockName + ".block";
@@ -122,5 +140,46 @@ public class InvertedIndexer {
 
 	}
 	
+	public List<Posting> addToDictionary(Map<String, List<Posting>> dictionary, String term) {
+		
+		List<Posting> newPostingList = new ArrayList<Posting>();
+
+		dictionary.put(term, newPostingList);
+		
+		return newPostingList;
+		
+	}
 	
+	public List<Posting> getPostingsList(Map<String, List<Posting>> dictionary, String term) {
+		
+		return dictionary.get(term);	
+	}
+	
+	public void addToPostingsList(List<Posting> postingList , Token token) {
+		
+		if(docIdExists(postingList, token)) {
+			for(Posting p : postingList) {
+				if(p.getDocId().equalsIgnoreCase(token.getDocId())) {
+					p.getPositions().add(token.getPosition());
+				}
+			}
+		} else {
+			Posting posting = new Posting();
+			posting.setDocId(token.getDocId());
+			List<String> positions = new ArrayList<String>();
+			positions.add(token.getPosition());
+			posting.setPositions(positions);
+			postingList.add(posting);
+		}	
+		
+	}
+	
+	public boolean docIdExists (List<Posting> postingList , Token token) {
+		for(Posting p : postingList) {
+			if(p.getDocId().equalsIgnoreCase(token.getDocId())) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

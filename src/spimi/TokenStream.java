@@ -9,6 +9,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.StringTokenizer;
 
+import model.Token;
+
 public class TokenStream {
 	
 	public static TokenStream instance;
@@ -48,6 +50,8 @@ public class TokenStream {
 			
 			for(File file : newsFiles) {
 				
+				int currentPosition = 0;
+				
 				String fileId = file.getName();
 				
 				BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -62,9 +66,13 @@ public class TokenStream {
 						String currentToken = tokenizer.nextToken();
 						
 						Token newToken = new Token();
-						newToken.term = currentToken;
-						newToken.docId = fileId;
+						newToken.setTerm(currentToken);
+						newToken.setDocId(fileId);
+						newToken.setPosition(String.valueOf(currentPosition));
+						
+						currentPosition ++;
 						tokenQueue.add(newToken);
+						
 						
 					}
 				}
@@ -72,8 +80,7 @@ public class TokenStream {
 			}
 			
 		}
-		System.out.println("Over!!!!");
-		System.out.println(tokenQueue.size());
+		
 	}
 	
 	public Token nextToken() {
