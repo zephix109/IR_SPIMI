@@ -161,6 +161,7 @@ public class InvertedIndexer {
 			for(Posting p : postingList) {
 				if(p.getDocId().equalsIgnoreCase(token.getDocId())) {
 					p.getPositions().add(token.getPosition());
+					p.setTermFrequency(p.getTermFrequency() + 1);
 				}
 			}
 		} else {
@@ -169,8 +170,10 @@ public class InvertedIndexer {
 			List<String> positions = new ArrayList<String>();
 			positions.add(token.getPosition());
 			posting.setPositions(positions);
+			posting.setTermFrequency(posting.getTermFrequency() + 1);
 			postingList.add(posting);
 		}	
+		
 		
 	}
 	

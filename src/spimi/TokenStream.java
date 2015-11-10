@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
 import java.util.StringTokenizer;
 
@@ -28,6 +30,7 @@ public class TokenStream {
 	
 	private Queue<Token> tokenQueue = new LinkedList<Token>();
 	private File rootFolder;
+	private Map<String, Integer> documentLengthTable = new HashMap<String, Integer>();
 	
 	public void initialize(File rootFolder) throws IOException {
 		
@@ -54,6 +57,8 @@ public class TokenStream {
 				
 				String fileId = file.getName();
 				
+				int documentLength = 0;
+				
 				BufferedReader reader = new BufferedReader(new FileReader(file));
 				String line;
 				
@@ -73,16 +78,28 @@ public class TokenStream {
 						currentPosition ++;
 						tokenQueue.add(newToken);
 						
+						documentLength ++;
+						
 						
 					}
 				}
 				reader.close();
+				
+				documentLengthTable.put(fileId, documentLength);
 			}
 			
 		}
 		
 	}
 	
+	public Map<String, Integer> getDocumentLengthTable() {
+		return documentLengthTable;
+	}
+
+	public void setDocumentLengthTable(Map<String, Integer> documentLengthTable) {
+		this.documentLengthTable = documentLengthTable;
+	}
+
 	public Token nextToken() {
 			
 		

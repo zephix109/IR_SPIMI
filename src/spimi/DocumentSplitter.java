@@ -40,8 +40,9 @@ public class DocumentSplitter {
 	 * @param file the file
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public void parseSgmFile (File file) throws IOException {
+	public int parseSgmFile (File file) throws IOException {
 		
+		int numberOfDocuments = 0;
 		
 		BufferedReader reader = new BufferedReader(new FileReader(file));
 		
@@ -56,6 +57,9 @@ public class DocumentSplitter {
 				
 				
 				currentFile = new NewsFile();
+				
+				++ numberOfDocuments;
+				
 				currentFile.setNewsID(line.substring(line.lastIndexOf("NEWID")).replaceAll("\\D+",""));
 				
 			}else if (line.matches("</REUTERS>")) {
@@ -66,10 +70,10 @@ public class DocumentSplitter {
 				
 				//Remove punctuation marks
             	line = line.replaceAll("[\\p{Punct}]", " ");	
-//            	
-//				//Remove numbers
+            	
+				//Remove numbers
 				line = line.replaceAll("\\d"," ");
-//				
+				
 				//Case folding
 				line = line.toLowerCase();
 				
@@ -84,6 +88,8 @@ public class DocumentSplitter {
 		}
 		
 		reader.close();
+		
+		return numberOfDocuments;
 	}
 	
 	/**

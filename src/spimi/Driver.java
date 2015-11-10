@@ -22,6 +22,10 @@ import model.Posting;
  */
 public class Driver {
 	
+	static Map<String, Integer> documentLengthTable = new HashMap<String, Integer>();
+	static int numberOfDocuments = 0;
+	static double averageLengthOfDoc;
+	
 	/**
 	 * The main method.
 	 *
@@ -49,8 +53,13 @@ public class Driver {
 	    });
 		
 	    for(File file : files) {
-	    	DocumentSplitter.getInstance().parseSgmFile(file);
+	    	
+	    	int numberOfDocumentsInSgm = DocumentSplitter.getInstance().parseSgmFile(file);
+	    	
+	    	numberOfDocuments += numberOfDocumentsInSgm;
+	    	
 	    }
+	    
 	    System.out.println("done!");
 	    
 	    //Construct block inverted index by SPIMI
@@ -62,6 +71,8 @@ public class Driver {
 	    	InvertedIndexer indexer = InvertedIndexer.getInstance();
 	    	indexer.spimiInvert(stream);
 	    }
+	    
+	    documentLengthTable = stream.getDocumentLengthTable();
 	    
 	    System.out.println("done!");
 
