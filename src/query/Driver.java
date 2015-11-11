@@ -1,4 +1,4 @@
-package spimi;
+package query;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,6 +16,9 @@ import java.util.Scanner;
 import java.util.StringJoiner;
 
 import model.Posting;
+import spimi.DocumentSplitter;
+import spimi.InvertedIndexer;
+import spimi.TokenStream;
 
 /**
  * The Class Driver.
@@ -25,6 +28,7 @@ public class Driver {
 	static Map<String, Integer> documentLengthTable = new HashMap<String, Integer>();
 	static int numberOfDocuments = 0;
 	static double averageLengthOfDoc;
+	
 	
 	/**
 	 * The main method.
@@ -74,6 +78,14 @@ public class Driver {
 	    
 	    documentLengthTable = stream.getDocumentLengthTable();
 	    
+	    long sumOfDocumentLength = 0;
+	    
+	    for(int i : documentLengthTable.values()) {
+	    	sumOfDocumentLength += i;
+	    }
+	    
+	    averageLengthOfDoc = sumOfDocumentLength / numberOfDocuments;
+	    
 	    System.out.println("done!");
 
 		//Merge blocks 
@@ -99,7 +111,9 @@ public class Driver {
 		
 
 		Boolean flag = true;
+		
 		while(flag) {
+			
 			System.out.println();
 			System.out.println("Please input your query:");
 			
@@ -118,10 +132,7 @@ public class Driver {
 			} else {
 				wordQuery(dictionary, query);
 			}
-			
-			
-
-				
+					
 		}	
 		sc.close();		
 	}
