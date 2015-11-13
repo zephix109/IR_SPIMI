@@ -10,8 +10,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.StringJoiner;
 
@@ -96,8 +99,11 @@ public class Driver {
 	    System.out.println("done!");
 	    System.out.println();
 	    
+	    
 	    //Remove stop words
-	    dictionary = removeStopWords(dictionary, 0);
+//	    dictionary = removeStopWords(dictionary, 10);
+	    
+
 
 		//Query
 		System.out.println("------------Dictionary Ready For Query------------");
@@ -121,23 +127,89 @@ public class Driver {
 			String query = originalInput.toLowerCase();
 			
 			
-			String[] querySplit = query.split("\\s+");
 			
 			System.out.println("------------Query for term [" + originalInput + "]--------------");
+			
+			rankedQuery(dictionary, query);
+			
+			System.out.println("--------------------------------------------------");
 
-			if(querySplit.length > 1) {
-				if(!phraseQuery(dictionary, querySplit)){
-					System.out.println("cannot find");
-				}
-			} else {
-				wordQuery(dictionary, query);
-			}
+
+//			String[] querySplit = query.split("\\s+");
+//
+//			if(querySplit.length > 1) {
+//				if(!phraseQuery(dictionary, querySplit)){
+//					System.out.println("cannot find");
+//				}
+//			} else {
+//				wordQuery(dictionary, query);
+//			}
 					
 		}	
 		sc.close();		
 	}
 	
-	private static boolean phraseQuery(Map<String, List<Posting>> dictionary, String[] querySplit) {
+	
+	public static void rankedQuery(Map<String, List<Posting>> dictionary, String query) {
+		
+		String[] querySplit = query.split("\\s+");
+		
+		Map<String, Double> rankedResult = new HashMap<String, Double>();
+		
+		for(String word : querySplit) {
+			
+			if(dictionary.containsKey(word)) {
+				
+				List<Posting> postingList = dictionary.get(word);
+				
+				double documentFrequency = postingList.size();
+				
+				for(Posting posting : postingList) {
+					
+					String docId = posting.getDocId().trim();
+					
+					double score = Rater.getInstance().bmScore(documentLengthTable.get(docId), numberOfDocuments,
+							documentFrequency, averageLengthOfDoc, posting.getPositions().size());
+					
+					if(rankedResult.containsKey(docId)) {
+						
+						double newScore = score + rankedResult.get(docId);
+						rankedResult.put(docId, newScore);
+					} else {
+						
+						rankedResult.put(docId, score);
+					}
+					
+				}
+
+				
+				
+			}
+			
+		}
+		
+		//Sort result	
+		if(rankedResult == null || rankedResult.isEmpty()) {
+			System.out.println("Can not find any document related to the query.");
+		} else {
+			Map<String, Double> sortedResult = sortMapByValue(rankedResult);
+			
+			System.out.println("Totally " + sortedResult.size() + " relevent documents." );
+
+			
+			for(Map.Entry<String, Double> entry : sortedResult.entrySet()) {
+				System.out.println("Document ID: " + entry.getKey() + ", Score:  " + entry.getValue());
+
+				
+			}
+		}
+		
+
+		
+		
+	}
+	
+	public static boolean phraseQuery(Map<String, List<Posting>> dictionary, String[] querySplit) {
 		
 		List<String> resultList = new ArrayList<String>();
 		
@@ -213,7 +285,7 @@ public class Driver {
 		return true;
 	}
 
-	private static void wordQuery(Map<String, List<Posting>> dictionary, String query) {
+	public static void wordQuery(Map<String, List<Posting>> dictionary, String query) {
 		
 		if(dictionary.containsKey(query)) {
 			
@@ -358,6 +430,34 @@ public class Driver {
 		
 		return dict;
 		
+	}
+	
+	public static Map<String, Double> sortMapByValue(Map<String, Double> map) {
+		
+		if (map == null || map.isEmpty()) {
+            return null;
+        }
+		
+		Map<String, Double> sortedMap = new LinkedHashMap<String, Double>();
+        List<Map.Entry<String, Double>> entryList = new ArrayList<Map.Entry<String, Double>>(map.entrySet());
+        Collections.sort(entryList, new MapValueComparator());
+ 
+        Iterator<Map.Entry<String, Double>> iter = entryList.iterator();
+        Map.Entry<String, Double> tmpEntry = null;
+        while (iter.hasNext()) {
+            tmpEntry = iter.next();
+            sortedMap.put(tmpEntry.getKey(), tmpEntry.getValue());
+        }
+        return sortedMap;
+	}
+	
+	static class MapValueComparator implements Comparator<Map.Entry<String, Double>> {
+		 
+	    @Override
+	    public int compare(Entry<String, Double> me1, Entry<String, Double> me2) {
+	 
+	        return me2.getValue().compareTo(me1.getValue());
+	    }
 	}
 
 }

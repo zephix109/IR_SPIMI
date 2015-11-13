@@ -57,6 +57,8 @@ public class TokenStream {
 				
 				String fileId = file.getName();
 				
+				
+				
 				int documentLength = 0;
 				
 				BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -85,7 +87,7 @@ public class TokenStream {
 				}
 				reader.close();
 				
-				documentLengthTable.put(fileId, documentLength);
+				documentLengthTable.put(fileId.replace(".news", ""), documentLength);
 			}
 			
 		}

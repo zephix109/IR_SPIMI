@@ -1,20 +1,38 @@
 package query;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class Rater {
 	
-	Map<String, Integer> documentLengthTable = new HashMap<String, Integer>();
-	int numberOfDocuments = 0;
-	double averageLengthOfDoc;
+	private static Rater instance = new Rater();
+	
+	private Rater() {}
+	
+	public static Rater getInstance() {
+		if(instance == null) {
+			instance = new Rater();
+		}
+		return instance;
+	}
+	
 	
 	static final double k1 = 1.5;
 	static final double b = 0.75;
 	
-	public double bmScore (Map<String, Integer> documentLengthTable, int numberOfDocuments, double averageLengthOfDoc) {
+	public double bmScore (double documentLength, int numberOfDocuments, double averageLengthOfDoc, 
+			double documentFrequency, double termFrequency) {
 		
-		return 0;
+		
+		double numerator = (k1 + 1) * termFrequency;
+		
+		
+		double denominator = k1 * ((1 - b) + b * (documentLength /averageLengthOfDoc)) + termFrequency;
+		
+
+		
+		double score = Math.log(numberOfDocuments / documentFrequency) * (numerator/denominator);
+		
+		return score;
+		
+		
 	}
 
 }
