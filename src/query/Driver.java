@@ -23,13 +23,19 @@ import spimi.DocumentSplitter;
 import spimi.InvertedIndexer;
 import spimi.TokenStream;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class Driver.
  */
 public class Driver {
 	
+	/** The document length table. */
 	static Map<String, Integer> documentLengthTable = new HashMap<String, Integer>();
+	
+	/** The number of documents. */
 	static int numberOfDocuments = 0;
+	
+	/** The average length of doc. */
 	static double averageLengthOfDoc;
 	
 	
@@ -150,6 +156,12 @@ public class Driver {
 	}
 	
 	
+	/**
+	 * Ranked query.
+	 *
+	 * @param dictionary the dictionary
+	 * @param query the query
+	 */
 	public static void rankedQuery(Map<String, List<Posting>> dictionary, String query) {
 		
 		String[] querySplit = query.split("\\s+");
@@ -209,6 +221,13 @@ public class Driver {
 		
 	}
 	
+	/**
+	 * Phrase query.
+	 *
+	 * @param dictionary the dictionary
+	 * @param querySplit the query split
+	 * @return true, if successful
+	 */
 	public static boolean phraseQuery(Map<String, List<Posting>> dictionary, String[] querySplit) {
 		
 		List<String> resultList = new ArrayList<String>();
@@ -285,6 +304,12 @@ public class Driver {
 		return true;
 	}
 
+	/**
+	 * Word query.
+	 *
+	 * @param dictionary the dictionary
+	 * @param query the query
+	 */
 	public static void wordQuery(Map<String, List<Posting>> dictionary, String query) {
 		
 		if(dictionary.containsKey(query)) {
@@ -386,7 +411,7 @@ public class Driver {
 	 * Removes the stop words.
 	 * Gets the stop words by sorting postings' lists by their sizes. 
 	 *
-	 * @param dic the dict
+	 * @param dict the dict
 	 * @param number the number
 	 * @return the map
 	 */
@@ -432,6 +457,12 @@ public class Driver {
 		
 	}
 	
+	/**
+	 * Sort map by value.
+	 *
+	 * @param map the map
+	 * @return the map
+	 */
 	public static Map<String, Double> sortMapByValue(Map<String, Double> map) {
 		
 		if (map == null || map.isEmpty()) {
@@ -451,9 +482,15 @@ public class Driver {
         return sortedMap;
 	}
 	
+	/**
+	 * The Class MapValueComparator.
+	 */
 	static class MapValueComparator implements Comparator<Map.Entry<String, Double>> {
 		 
-	    @Override
+	    /* (non-Javadoc)
+    	 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+    	 */
+    	@Override
 	    public int compare(Entry<String, Double> me1, Entry<String, Double> me2) {
 	 
 	        return me2.getValue().compareTo(me1.getValue());

@@ -14,6 +14,7 @@ import java.util.StringJoiner;
 import model.Posting;
 import model.Token;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class InvertedIndexer.
  */
@@ -42,13 +43,14 @@ public class InvertedIndexer {
 	/** The dictionary. */
 	private Map<String, List<Posting>> dictionary;
 	
+	/** The output file id. */
 	private int outputFileId = 0;
 	
 
 	/**
 	 * Spimi invert.
 	 *
-	 * @param rootFolder the root folder
+	 * @param tokenStream the token stream
 	 * @return the file
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
@@ -140,6 +142,13 @@ public class InvertedIndexer {
 
 	}
 	
+	/**
+	 * Adds the to dictionary.
+	 *
+	 * @param dictionary the dictionary
+	 * @param term the term
+	 * @return the list
+	 */
 	public List<Posting> addToDictionary(Map<String, List<Posting>> dictionary, String term) {
 		
 		List<Posting> newPostingList = new ArrayList<Posting>();
@@ -150,11 +159,24 @@ public class InvertedIndexer {
 		
 	}
 	
+	/**
+	 * Gets the postings list.
+	 *
+	 * @param dictionary the dictionary
+	 * @param term the term
+	 * @return the postings list
+	 */
 	public List<Posting> getPostingsList(Map<String, List<Posting>> dictionary, String term) {
 		
 		return dictionary.get(term);	
 	}
 	
+	/**
+	 * Adds the to postings list.
+	 *
+	 * @param postingList the posting list
+	 * @param token the token
+	 */
 	public void addToPostingsList(List<Posting> postingList , Token token) {
 		
 		if(docIdExists(postingList, token)) {
@@ -177,6 +199,13 @@ public class InvertedIndexer {
 		
 	}
 	
+	/**
+	 * Doc id exists.
+	 *
+	 * @param postingList the posting list
+	 * @param token the token
+	 * @return true, if successful
+	 */
 	public boolean docIdExists (List<Posting> postingList , Token token) {
 		for(Posting p : postingList) {
 			if(p.getDocId().equalsIgnoreCase(token.getDocId())) {

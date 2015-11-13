@@ -38,6 +38,7 @@ public class DocumentSplitter {
 	 * Parses the sgm file.
 	 *
 	 * @param file the file
+	 * @return the int
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public int parseSgmFile (File file) throws IOException {

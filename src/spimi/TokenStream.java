@@ -13,13 +13,25 @@ import java.util.StringTokenizer;
 
 import model.Token;
 
+/**
+ * The Class TokenStream.
+ */
 public class TokenStream {
 	
+	/** The instance. */
 	public static TokenStream instance;
 	
 	
+	/**
+	 * Instantiates a new token stream.
+	 */
 	private TokenStream() {}
 	
+	/**
+	 * Gets the single instance of TokenStream.
+	 *
+	 * @return single instance of TokenStream
+	 */
 	public static TokenStream getInstance() {
 		if(instance == null) {
 			instance = new TokenStream();
@@ -28,10 +40,21 @@ public class TokenStream {
 	}
 	
 	
+	/** The token queue. */
 	private Queue<Token> tokenQueue = new LinkedList<Token>();
+	
+	/** The root folder. */
 	private File rootFolder;
+	
+	/** The document length table. */
 	private Map<String, Integer> documentLengthTable = new HashMap<String, Integer>();
 	
+	/**
+	 * Initialize.
+	 *
+	 * @param rootFolder the root folder
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	public void initialize(File rootFolder) throws IOException {
 		
 		this.setRootFolder(rootFolder);
@@ -94,14 +117,29 @@ public class TokenStream {
 		
 	}
 	
+	/**
+	 * Gets the document length table.
+	 *
+	 * @return the document length table
+	 */
 	public Map<String, Integer> getDocumentLengthTable() {
 		return documentLengthTable;
 	}
 
+	/**
+	 * Sets the document length table.
+	 *
+	 * @param documentLengthTable the document length table
+	 */
 	public void setDocumentLengthTable(Map<String, Integer> documentLengthTable) {
 		this.documentLengthTable = documentLengthTable;
 	}
 
+	/**
+	 * Next token.
+	 *
+	 * @return the token
+	 */
 	public Token nextToken() {
 			
 		
@@ -109,6 +147,11 @@ public class TokenStream {
 		return tokenQueue.poll();
 	}
 	
+	/**
+	 * Checks for next token.
+	 *
+	 * @return true, if successful
+	 */
 	public boolean hasNextToken() {
 		if(tokenQueue.isEmpty()) {
 			return false;
@@ -116,10 +159,20 @@ public class TokenStream {
 		return true;
 	}
 
+	/**
+	 * Gets the root folder.
+	 *
+	 * @return the root folder
+	 */
 	public File getRootFolder() {
 		return rootFolder;
 	}
 
+	/**
+	 * Sets the root folder.
+	 *
+	 * @param rootFolder the new root folder
+	 */
 	public void setRootFolder(File rootFolder) {
 		this.rootFolder = rootFolder;
 	}
