@@ -192,9 +192,7 @@ public class Driver {
 						rankedResult.put(docId, score);
 					}
 					
-				}
-
-				
+				}	
 				
 			}
 			
@@ -206,14 +204,16 @@ public class Driver {
 		} else {
 			Map<String, Double> sortedResult = sortMapByValue(rankedResult);
 			
-			System.out.println("Totally " + sortedResult.size() + " relevent documents." );
+			System.out.println("Found " + sortedResult.size() + " relevent documents." );
 
 			
 			for(Map.Entry<String, Double> entry : sortedResult.entrySet()) {
 				System.out.println("Document ID: " + entry.getKey() + ", Score:  " + entry.getValue());
-
 				
 			}
+			
+			System.out.println("Found " + sortedResult.size() + " relevent documents." );
+
 		}
 		
 
