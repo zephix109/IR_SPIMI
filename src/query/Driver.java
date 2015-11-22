@@ -131,9 +131,9 @@ public class Driver {
 			
 			String originalInput = sc.nextLine();
 			String query = originalInput.toLowerCase();
-			query.replaceAll("[\\p{Punct}]", " ");
-			query.replaceAll("\\d"," ");
-
+			query = query.replaceAll("[\\p{Punct}]", " ");
+			query = query.replaceAll("\\d"," ");
+			System.out.println(query);
 			
 			
 			System.out.println("------------Query for term [" + originalInput + "]--------------");
@@ -165,6 +165,8 @@ public class Driver {
 	 * @param query the query
 	 */
 	public static void rankedQuery(Map<String, List<Posting>> dictionary, String query) {
+		
+		System.out.println(query);
 		
 		String[] querySplit = query.split("\\s+");
 		
