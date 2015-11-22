@@ -131,7 +131,9 @@ public class Driver {
 			
 			String originalInput = sc.nextLine();
 			String query = originalInput.toLowerCase();
-			
+			query.replaceAll("[\\p{Punct}]", " ");
+			query.replaceAll("\\d"," ");
+
 			
 			
 			System.out.println("------------Query for term [" + originalInput + "]--------------");
@@ -200,23 +202,46 @@ public class Driver {
 		
 		//Sort result	
 		if(rankedResult == null || rankedResult.isEmpty()) {
+			
 			System.out.println("Can not find any document related to the query.");
+			
 		} else {
 			Map<String, Double> sortedResult = sortMapByValue(rankedResult);
 			
-			System.out.println("Found " + sortedResult.size() + " relevent documents." );
+			System.out.println();
+			System.out.println("Totally " + sortedResult.size() + " relevent documents found." );
 
+			//Print out top 20 result
+			List<Map.Entry<String, Double>> entryList = new ArrayList<Map.Entry<String, Double>> (sortedResult.entrySet());
 			
-			for(Map.Entry<String, Double> entry : sortedResult.entrySet()) {
-				System.out.println("Document ID: " + entry.getKey() + ", Score:  " + entry.getValue());
-				
+			int numberOfResult;
+			
+			if(entryList.size() < 20) {
+				numberOfResult = entryList.size();
+			} else {
+				numberOfResult = 20;
 			}
 			
-			System.out.println("Found " + sortedResult.size() + " relevent documents." );
-
-		}
+	
+			
+			System.out.println("The top " + numberOfResult + " ranked documents are: ");
+			
+			for(int i=0; i<numberOfResult; i++) {
+				System.out.println("Document ID: " + entryList.get(i).getKey() + ", Score:  " + entryList.get(i).getValue());
+			}
 		
+//			// Print out all result
+//			for(Map.Entry<String, Double> entry : sortedResult.entrySet()) {
+//				
+//				
+//				System.out.println("Document ID: " + entry.getKey() + ", Score:  " + entry.getValue());
+//
+//				
+//			}
 
+		
+		
+		}
 		
 		
 	}
@@ -487,7 +512,7 @@ public class Driver {
 	 */
 	static class MapValueComparator implements Comparator<Map.Entry<String, Double>> {
 		 
-	    /* (non-Javadoc)
+	    /**
     	 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
     	 */
     	@Override
