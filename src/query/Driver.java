@@ -56,36 +56,37 @@ public class Driver {
 
 	  
 	    
-	    //Split files
-	    System.out.print("Splitting Files...");
-	    File[] files = root.listFiles(new FilenameFilter() {
-	    	@Override
-	    	public boolean accept(File dir, String name) {
-	            return name.toLowerCase().endsWith(".sgm");
-	        }
-	    });
-		
-	    for(File file : files) {
-	    	
-	    	int numberOfDocumentsInSgm = DocumentSplitter.getInstance().parseSgmFile(file);
-	    	
-	    	numberOfDocuments += numberOfDocumentsInSgm;
-	    	
-	    }
-	    
-	    System.out.println("done!");
+//	    //Split files
+//	    System.out.print("Splitting Files...");
+//	    File[] files = root.listFiles(new FilenameFilter() {
+//	    	@Override
+//	    	public boolean accept(File dir, String name) {
+//	            return name.toLowerCase().endsWith(".sgm");
+//	        }
+//	    });
+//		
+//	    for(File file : files) {
+//	    	
+//	    	int numberOfDocumentsInSgm = DocumentSplitter.getInstance().parseSgmFile(file);
+//	    	
+//	    	numberOfDocuments += numberOfDocumentsInSgm;
+//	    	
+//	    }
+//	    
+//	    System.out.println("done!");
 	    
 	    //Construct block inverted index by SPIMI
 	    System.out.print("Building inveted index...");
-	    String reutersPath = System.getProperty("user.dir") + File.separator + "reuters" + File.separator;
+	    
 	    TokenStream stream = TokenStream.getInstance();
-	    stream.initialize(new File(reutersPath));
+	    stream.initialize(root);
 	    while(stream.hasNextToken()) {
 	    	InvertedIndexer indexer = InvertedIndexer.getInstance();
 	    	indexer.spimiInvert(stream);
 	    }
 	    
 	    documentLengthTable = stream.getDocumentLengthTable();
+	    numberOfDocuments = stream.getNumberOfDocuments();
 	    
 	    long sumOfDocumentLength = 0;
 	    

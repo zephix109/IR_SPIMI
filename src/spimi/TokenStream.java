@@ -3,8 +3,9 @@ package spimi;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -49,6 +50,10 @@ public class TokenStream {
 	/** The document length table. */
 	private Map<String, Integer> documentLengthTable = new HashMap<String, Integer>();
 	
+	private int numberOfDocuments = 0;
+	
+
+
 	/**
 	 * Initialize.
 	 *
@@ -58,25 +63,20 @@ public class TokenStream {
 	public void initialize(File rootFolder) throws IOException {
 		
 		this.setRootFolder(rootFolder);
+
 		
-		File[] folders = rootFolder.listFiles(new FilenameFilter() {
-			  @Override
-			  public boolean accept(File current, String name) {
-			    return new File(current, name).isDirectory();
-			  }
-		});
-		
-		for(File folder : folders) {
-			File[] newsFiles = folder.listFiles(new FilenameFilter() {
-				  @Override
-				  public boolean accept(File current, String name) {
-				    return name.toLowerCase().endsWith(".news");
-				  }
-			});
+		Files.walk(Paths.get(rootFolder.toURI())).forEach(filePath -> {
 			
-			for(File file : newsFiles) {
-				
-				int currentPosition = 0;
+		    if (Files.isRegularFile(filePath)) {
+		    	
+		    	numberOfDocuments++;
+		    	
+		        System.out.println(filePath);
+		        
+		        int currentPosition = 0;
+		        
+		        File file = filePath.toFile();
+		        
 				
 				String fileId = file.getName();
 				
@@ -84,36 +84,54 @@ public class TokenStream {
 				
 				int documentLength = 0;
 				
-				BufferedReader reader = new BufferedReader(new FileReader(file));
-				String line;
 				
 				
-				while ((line = reader.readLine()) != null) {
-				
-					StringTokenizer tokenizer = new StringTokenizer(line);
-					while(tokenizer.hasMoreTokens()) {
+				BufferedReader reader;
+				try {
+					reader = new BufferedReader(new FileReader(file));
+					String line;
+					
+					
+					while ((line = reader.readLine()) != null) {
+					
 						
-						String currentToken = tokenizer.nextToken();
+						//Remove punctuation marks
+		            	line = line.replaceAll("[\\p{Punct}]", " ");	
+		            	
+						//Remove numbers
+						line = line.replaceAll("\\d"," ");
 						
-						Token newToken = new Token();
-						newToken.setTerm(currentToken);
-						newToken.setDocId(fileId);
-						newToken.setPosition(String.valueOf(currentPosition));
+						//Case folding
+						line = line.toLowerCase();
 						
-						currentPosition ++;
-						tokenQueue.add(newToken);
-						
-						documentLength ++;
-						
-						
+						StringTokenizer tokenizer = new StringTokenizer(line);
+						while(tokenizer.hasMoreTokens()) {
+							
+							String currentToken = tokenizer.nextToken();
+							
+							Token newToken = new Token();
+							newToken.setTerm(currentToken);
+							newToken.setDocId(fileId);
+							newToken.setPosition(String.valueOf(currentPosition));
+							
+							currentPosition ++;
+							tokenQueue.add(newToken);
+							
+							documentLength ++;
+							
+							
+						}
 					}
+					reader.close();
+					
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-				reader.close();
 				
-				documentLengthTable.put(fileId.replace(".news", ""), documentLength);
-			}
-			
-		}
+				documentLengthTable.put(fileId.replace(".html", ""), documentLength);
+		    }
+		});
+		
 		
 	}
 	
@@ -177,4 +195,11 @@ public class TokenStream {
 		this.rootFolder = rootFolder;
 	}
 	
+	public int getNumberOfDocuments() {
+		return numberOfDocuments;
+	}
+
+	public void setNumberOfDocuments(int numberOfDocuments) {
+		this.numberOfDocuments = numberOfDocuments;
+	}
 }
