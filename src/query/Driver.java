@@ -19,11 +19,9 @@ import java.util.Scanner;
 import java.util.StringJoiner;
 
 import model.Posting;
-import spimi.DocumentSplitter;
 import spimi.InvertedIndexer;
 import spimi.TokenStream;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class Driver.
  */
@@ -110,10 +108,13 @@ public class Driver {
 	    //Remove stop words
 //	    dictionary = removeStopWords(dictionary, 10);
 	    
-
+	    
 
 		//Query
 		System.out.println("------------Dictionary Ready For Query------------");
+		
+		System.out.println("Sentiment Socre of Document Set= " + String.valueOf(stream.getSentimentScore()));
+		
 		System.out.println("Number Of Terms = " + dictionary.size());
 		int numOfPostings = 0;
 		for(List<Posting> postingsList :dictionary.values()) {
@@ -181,12 +182,16 @@ public class Driver {
 				
 				double documentFrequency = postingList.size();
 				
+				for(Posting posting: postingList){
+					System.out.println(posting.getDocId() + " ");
+				}
+				
 				for(Posting posting : postingList) {
 					
 					String docId = posting.getDocId().trim();
 					
 					double score = Rater.getInstance().bmScore(documentLengthTable.get(docId), numberOfDocuments,
-							documentFrequency, averageLengthOfDoc, posting.getPositions().size());
+							averageLengthOfDoc, documentFrequency, posting.getPositions().size());
 					
 					if(rankedResult.containsKey(docId)) {
 						
@@ -425,8 +430,10 @@ public class Driver {
 			for(Map.Entry<String, List<Posting>> entry : subDictionary.entrySet()) {
 				
 				if(finalDictionary.containsKey(entry.getKey())) {
+					
 					finalDictionary.get(entry.getKey()).addAll(entry.getValue());
 				} else {
+					
 					finalDictionary.put(entry.getKey(), entry.getValue());
 				}	
 			}

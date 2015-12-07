@@ -13,6 +13,7 @@ import java.util.Queue;
 import java.util.StringTokenizer;
 
 import model.Token;
+import sentiment.SentimentAnalyser;
 
 /**
  * The Class TokenStream.
@@ -52,6 +53,7 @@ public class TokenStream {
 	
 	private int numberOfDocuments = 0;
 	
+	private int sentimentScore = 0;
 
 
 	/**
@@ -63,15 +65,15 @@ public class TokenStream {
 	public void initialize(File rootFolder) throws IOException {
 		
 		this.setRootFolder(rootFolder);
-
+		
+		SentimentAnalyser analyser = SentimentAnalyser.getInstance();
+		analyser.getAfinn(".\\AFINN-111.txt");
 		
 		Files.walk(Paths.get(rootFolder.toURI())).forEach(filePath -> {
 			
 		    if (Files.isRegularFile(filePath)) {
 		    	
-		    	numberOfDocuments++;
-		    	
-		        System.out.println(filePath);
+		    	numberOfDocuments++;		
 		        
 		        int currentPosition = 0;
 		        
@@ -83,9 +85,7 @@ public class TokenStream {
 				
 				
 				int documentLength = 0;
-				
-				
-				
+								
 				BufferedReader reader;
 				try {
 					reader = new BufferedReader(new FileReader(file));
@@ -119,6 +119,8 @@ public class TokenStream {
 							
 							documentLength ++;
 							
+							//sentiment
+							sentimentScore += analyser.sentimentAnalysis(currentToken);
 							
 						}
 					}
@@ -128,7 +130,7 @@ public class TokenStream {
 					e.printStackTrace();
 				}
 				
-				documentLengthTable.put(fileId.replace(".html", ""), documentLength);
+				documentLengthTable.put(fileId, documentLength);
 		    }
 		});
 		
@@ -202,4 +204,16 @@ public class TokenStream {
 	public void setNumberOfDocuments(int numberOfDocuments) {
 		this.numberOfDocuments = numberOfDocuments;
 	}
+
+	public int getSentimentScore() {
+		return sentimentScore;
+	}
+
+	public void setSentimentScore(int sentimentScore) {
+		this.sentimentScore = sentimentScore;
+	}
+
+	
+
+	
 }
